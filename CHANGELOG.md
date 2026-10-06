@@ -1,6 +1,12 @@
 # Changelog
 
-## 0.6.0 (2026-10-05)
+## 0.6.0 (2026-10-06)
+
+First public release, on the VS Code Marketplace.
+
+Getting started
+- `.qplug` files open as Lua, highlighted, with no setup
+- A first-run tip says how to open the preview; later, bug-fix updates install quietly and only a new feature release says what's new
 
 Test mode, checked against QSC's Lua reference
 - **Sockets written the callback way work:** `sock.Connected = function…`, `sock.Data = function…` (and Closed, Error, Reconnect, Timeout) are called, not only `EventHandler`. `TcpSocket.NewTls()` works and sockets have `PeerAddress`

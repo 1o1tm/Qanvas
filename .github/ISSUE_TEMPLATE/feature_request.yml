@@ -1,0 +1,11 @@
+name: Feature request
+description: Something Qanvas should do
+labels: [enhancement]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like?
+      description: What you're trying to do in your plugin, and what would make it easier.
+    validations:
+      required: true

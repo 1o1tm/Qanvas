@@ -1,0 +1,31 @@
+name: Bug report
+description: Something in Qanvas doesn't work, or doesn't match Designer
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for reporting it. A small plugin that shows the problem helps the most.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you did, what you expected, and what you saw instead.
+    validations:
+      required: true
+  - type: textarea
+    id: plugin
+    attributes:
+      label: Plugin code
+      description: The .qplug, or the part that matters. Leave out anything private.
+      render: lua
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      description: Qanvas and VS Code, plus Q-SYS Designer if it's about how something looks.
+      placeholder: Qanvas 0.6.0, VS Code 1.123, Designer 10.5
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: For anything visual, Qanvas next to Designer shows it best.

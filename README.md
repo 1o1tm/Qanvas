@@ -16,6 +16,10 @@ No more restarting Designer to see whether a button moved 5 pixels.
 
 ![The Meeting room starter in Designer and in Qanvas](media/readme/meeting-room.png)
 
+## Install
+
+In VS Code, open the Extensions view (**Ctrl+Shift+X**), search for **Qanvas** and click **Install**. Or download the `.vsix` from the [releases](https://github.com/1o1tm/Qanvas/releases) and run **Extensions: Install from VSIX…**.
+
 ## How to use it
 
 1. Open a `.qplug` file.
@@ -68,6 +72,10 @@ The [guide](docs/GUIDE.md) walks through everything, step by step.
 | `qanvas.snapToGrid` | on | Snap to the grid while dragging |
 | `qanvas.smartGuides` | on | Snap to other controls' edges and centers |
 | `qanvas.colorDecorators` | on | Color swatches in `.qplug` files |
+
+## Feedback
+
+Found a bug, or missing something? [Open an issue](https://github.com/1o1tm/Qanvas/issues).
 
 ---
 
