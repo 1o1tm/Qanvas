@@ -1,0 +1,23 @@
+Qanvas
+Copyright (c) 2026 Timothy McKinney. All rights reserved.
+
+This software is proprietary. You may install and use it free of charge.
+
+You may not, without written permission from the copyright holder:
+  - copy, modify, merge, translate, or create derivative works of the software;
+  - decompile, disassemble, or reverse engineer the software, except where
+    applicable law expressly permits it;
+  - sell, sublicense, rent, lend, distribute, or publish the software or any
+    part of it.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHOR BE
+LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY ARISING FROM THE USE OF THE
+SOFTWARE.
+
+Q-SYS is a trademark of QSC, LLC. Qanvas is not affiliated with or endorsed by
+QSC, LLC.
+
+Third-party components bundled with Qanvas are licensed under their own terms;
+see THIRD_PARTY_NOTICES.md.
