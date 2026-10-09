@@ -1,5 +1,90 @@
 # Changelog
 
+## 0.7.0 (2026-10-09)
+Drag what your code places, test against the real device and record the tests, finish a theme, and send to Designer without restarting it.
+
+Drag what loops, helpers and lookup tables place
+- **Things your code places with loops, helper functions and lookup tables can be dragged and resized.** Qanvas works out which numbers in the code each one is made from, and a drag changes the one that moves the fewest other things: a helper's argument, a lookup table's entry, the gap above a row, a loop's step or its start. Everything made from the same numbers moves with it while you drag (outlined, dashed), and the inspector says which number, on which line, a drag changes
+- **It lands where the preview shows.** Where a number is multiplied (the third strip of a loop moves by twice the step), the drag snaps to the places that number can reach, and a whole number stays whole. Resizing from one edge keeps the other edge where it is where the code allows it (cells grow into their gaps). Moving several things together changes a number they share once. Arrow keys move such things by at least one step of their number
+- **It writes only what the preview showed.** The edited code is run on every page before it's written, and the edit is refused if anything else would change: something a branch in the layout code moves (a `math.max`, an `if`, a loop that runs once more), a font size, color or legend made from the same number, a property's default, an item added or gone, or a size below a pixel. When the code can't do what a drag asks, the preview says so and nothing moves. Things on another page made from the same numbers (or by the same line of code) move with them, and a note says so
+- **What can't be followed exactly stays locked:** a position worked out with a division and then rounded, `%`, an index into a table, a loop's count, a number that went through a library call, or one that also sets a font size, a color or a legend. Property defaults (however they're written), PluginInfo, Min/Max and Counts are never what a drag changes, nor is the 1 in `i - 1`. A number that becomes negative is written so it still reads as one
+
+Scale a selection as one
+- **Select several things and a box with handles goes around them all:** drag a handle to scale the whole selection, a keypad down or a row of LEDs up. Places and sizes scale from the opposite side, and text sizes and corners scale with them (by the smaller of the two directions, so a row stretched wider keeps its text). **Shift** keeps the proportions, **Alt** scales from the center, **Ctrl** keeps the text sizes. The inspector's **Scale %** does it by an exact amount
+- Things a loop or a lookup table places scale through the numbers they're made from: scaling a keypad built from column and row tables rewrites the tables and the key size
+
+Layers and what's on top
+- **Drag rows in Layers** (one, or several selected) to change what's on top. It's written as ZOrder, the layout property Designer stacks by, on as few items as it can (often just the one you moved). Controls always draw above graphics in Designer, so a control can't go below a graphic: Layers says so instead. There's no grouping: a plugin's layout has no groups for it to write
+- **Bring Forward** and **Send Backward** join Bring to Front and Send to Back in the right-click menu, with **Ctrl+]** and **Ctrl+[** (Shift: to the front or back). Each selected item moves one step, as in Designer
+
+Design kits
+- **A finish goes with a theme** (in the 🎨 Theme menu): **corners** (square, soft or round, on buttons, displays, cards and filled labels), **text sizes** by role (one for titles, one for sections, one for the rest: Compact 16 / 12 / 10 or Comfortable 20 / 14 / 12), **one font** (Roboto, Lato, Montserrat, Open Sans or Poppins), **group boxes as cards** (filled, no outline, rounded; a box with a color of its own, like a dark title bar, keeps it) and **positions on the grid**. Hover a theme to see it all on the plugin before applying; **Keep colors** applies the finish alone. It's all layout properties Designer draws, so the plugin looks the same there and a Core runs it no slower
+
+Test mode behaves like a Core
+- **Core tab:** the console's **Core** button shows the busiest call as a share of what a Core allows each call into a plugin (200,000 Lua instructions: startup, each EventHandler, each timer tick, each socket event), and turns orange or red. Its tab lists each kind of call with its heaviest run, and what the code ran into that a Core does differently, with links to the lines. Only the plugin's own code counts, not Qanvas's stand-ins for Q-SYS's libraries
+- **A call past the budget stops** with the Core's own message ("Max execution limits exceeded") on its line. One that a pcall swallows is pointed out: on a Core its work is left half done, and anything more the call does stops at the limit again
+- **A plugin's own `:Trigger()`** pulses the control but doesn't run its EventHandler, as on a Core (Emulate does), and **`os.clock()` is CPU time**, as on a Core. Both are pointed out where they happen
+- **Where Test mode's whole numbers part ways with a Core's, it says so.** Its Lua keeps whole numbers in 32 bits, a Core's go to 64: a result past 2,147,483,647 (a millisecond timestamp), a hex number past `0x7FFFFFFF`, or a 4-byte number from `string.unpack` past it, comes out different. Test mode points out each one, with its line and what a Core would give, and an error about it ("number has no integer representation") says why. Bit work (a CRC-32, an IP address made with `<<` and `|`) keeps its bits and isn't flagged
+- **⏩ 10 s** runs what the next 10 seconds (Shift: a minute) would bring, now: timers, polling, reconnects and timeouts, with Timer.Now() moving along
+- New problems in the code: `os.clock()`, a Timer kept only in a local (it can be garbage-collected while it runs, QSC's advice), and a plugin's own `Trigger()` on a control with an EventHandler. The Clock preset keeps its timer in a global
+
+Test mode on the real network, and the rest of the design
+- **Real network** (in the Test console's bar): TcpSocket (and `NewTls`), UdpSocket, WebSocket and HttpClient connect for real, from your computer, to the device on your desk or the service you're writing a driver for. What goes each way shows in the console, byte for byte, and your code's reconnects, timeouts and errors happen for real. Certificates aren't checked, so devices with self-signed ones work. Serial ports stay pretend. Off, everything talks to the pretend device you play from the console, as before
+- **Pretend components:** `Component.New("Name")` gives a component whose controls keep what your code sets on them, and so do `NamedControl.SetValue` and the rest. They show in Values, under Components, by component; click one and type a value to change it the way the design would, and its EventHandler runs. `Component.GetComponents()` and `Component.GetControls()` list them
+- A TcpSocket that can't connect (refused, unreachable) gets an Error, and tries again after its ReconnectTimeout, as on a Core. A port that isn't one (70000) is an Error too. A WebSocket message over 16 MB is cut off, and each test session's connections are its own
+
+Recorded tests and device rules
+- **● Record** (in the Test console) starts the test over and keeps everything you do: presses, what the device sends, lines you type, time passing (⏩ too), what the real network sent back. **■ Save test** names it and puts it in a `.qtest.json` next to the plugin (Local-Bypass.qplug gets Local-Bypass.qtest.json), so it can be committed with it
+- **Recorded tests run in VS Code's Testing panel.** Each one replays on a clock that only moves when told to, so it runs the same way every time and in a moment, on any computer, and checks what the plugin did: its controls at the end, what it sent and connected to, and its errors. When the plugin starts doing something else, the test fails and says what, in words ("Message 4 it sent: was tcp 1 → PWR OFF\r\n, now tcp 1 → POWER OFF\r\n"). **Qanvas: Accept Recorded Test Results** makes what it does now the expected result. A test recorded on the real network replays what the device sent, without the network
+- **Device rules** (the console's Device tab): the pretend device answers by itself. "When it receives PWR? it replies PWR=ON", "every 5 s it sends STATUS OK", "a request to GET */status gets 200 {...}". A `*` matches anything (on the line, for text), and `$1` in the reply puts it back ("PWR *" → "PWR=$1"). Rules remember: "PWR *" keeps what came after PWR, and `PWR=$PWR` says it back. Plain text is a line, `\r \n \xNN` are exact bytes. Rules are kept for each plugin, change while the test runs, and are replayed with a recorded test
+
+Driver building blocks
+- **Device driver** (a preset, under Devices) drops in a TCP device's controls (IP, port, Connect, an online LED, status, Power, Volume) and the code a driver needs, wired together and explained: a **command queue** (one command at a time, each waits for its reply, times out, is tried again, then given up; the latest of a kind replaces what's waiting, so a volume moved five times goes once), **polling** while connected, a **watchdog** that reconnects a device that goes quiet, **reply handlers** for what the device says (one that fails says so, and the queue goes on), and a fader that sends **once it settles**. Its timers live in a global table, as QSC advises, and it passes every Core check. Change the example commands for your device's
+- It comes with **device rules** that play its example device in Test mode: type an IP address, turn Connect on, and the pretend device answers
+
+Test mode: the driver test kit
+- **Binary protocols work byte for byte:** what your code writes shows exactly (`→ \x81\x01\x04\x00\x02\xff`), bytes you type with `\xNN` arrive exactly (before, bytes from 0x80 up arrived as two), and printing binary data, or putting it in a control, no longer stops Test mode
+- **Serial ports:** a plugin's serial pins become `SerialPorts[1]`, `[2]`… on the pretend device. Open, Write (an error while closed, as on a Core), ReadLine, Data and EventHandler all work, and what you type in the console arrives as a line
+- **Crypto computes for real:** Base64, `MD5Compute`, `Digest` and `HMAC` (MD5, SHA-1, SHA-256, SHA-512), AES-128/256 in CBC and ECB, PBKDF2 and random bytes, checked byte for byte against OpenSSL, so device logins and signed requests can be tested. (`CRC16Compute` leaves a note: QSC doesn't say which CRC-16 it is)
+- **WebSocket** talks to a pretend server: connect, write, ping and pong, messages you type arrive as typed, and Drop link closes it
+- What you type for a UDP or WebSocket device is sent as typed; TcpSocket and serial get a line (CR LF added)
+- **Values** in the console lists every control's Value, String and Position as your code sees them, updated live; a change flashes and **ƒ** marks a control whose EventHandler is set. Hover a row to point the control out, click it to see its EventHandler in the code, filter by name. Drag the console's top edge to make it taller (remembered)
+
+Send to Designer, without restarting Designer
+- **Qanvas: Send to Designer** (also in the preview's Export menu) puts the plugin in Q-SYS Designer's Plugins folder, and **Designer's library has it straight away, under the same name: no restart.** Designer reads a plugin file the moment one appears in its Plugins folder, but one changed in place only when it starts, so Qanvas writes the new version beside the old one and swaps it in, in one step (the plugin is never missing or half-written there). Blocks already in a design keep the version they were made with until you take the update Designer offers when the design opens. Turn on `qanvas.sendToDesignerOnSave` to send on every save
+- It never replaces something that isn't this plugin: the Id is read from the code (not from a comment), a different plugin with the same file name, or one whose Id can't be read, is only replaced if you say so, and another copy with the same Id, or an encrypted `.qplugx` build next to it, is pointed out. A link in the Plugins folder is left alone (restart Designer for a plugin linked there); a plugin opened from the folder itself reloads too
+- **A plugin with a Lua error isn't sent on save** (the status bar says which line), and Send to Designer asks first: Designer would show a Plugin Error and drop it from its library until a version without the error arrives. A Plugins folder set in Settings is the only one used: if it isn't there, nothing is sent
+
+Don't break designs that already use the plugin
+- **Renaming a control that has a pin** in the version in Designer's Plugins folder asks first: designs wired to it lose the wire when its Name changes. **Change the pin name** changes only what the pin shows (PrettyName), which keeps the wires
+- **Qanvas: Compare With Another Version** (also in the Export menu) lists what designs that use another version would notice: Designer's copy, the last git commit, or any file. It shows wires that break (a renamed or removed control or audio pin, fewer elements, one control made into several or several into one, a pin that lost a direction, a new Id), controls that behave differently (another type, gone without a pin), properties that are gone or changed, and what's new. The code follows as you go through the list
+
+Release check
+- **Qanvas: Release Check** (also in the Export menu) lists what to look at before sharing a plugin, and the code follows as you arrow through: errors and warnings from the Problems panel, a placeholder or non-GUID Id, no Version, ShowDebug on, leftover `print()` calls, IP addresses and passwords written into the code, another plugin in Designer's Plugins folder with the same Id (or this one under its old name, after a rename), extra copies of this one there, Designer's copy having the same Version with different code, and what would break since Designer's copy
+
+Pins view
+- **+ Control in** and **+ Control out** show the new pin on the block right away. It was added to the code, but a pin with a PinStyle starts unticked in Designer, so the block left it off and it looked like nothing happened
+- The block says how many optional pins it leaves off (as a block dropped into a design does) and **show them all** ticks them
+- The strip of controls that aren't on the panel says what they are (GetControls makes them, GetControlLayout gives them no place) and stays out of the Pins view
+
+Starting a plugin, checked against Designer's own loader
+- **An empty `.qplug` becomes a plugin in one click:** open the preview on it and Qanvas offers to start a new plugin there (PluginInfo with a new Id, and the functions Designer needs). The lightbulb on its first problem does the same, and a file missing only its PluginInfo gets one added
+- New checks, measured with Designer 10.0.3's and 10.5's own plugin loader: without GetControls, Designer lists the plugin but can't place a block of it (an error, with a quick fix). Without GetControlLayout, Designer adds a script's own controls to the block (a warning, with a quick fix)
+- Every New Plugin starter, and a plugin built only in the preview, was loaded with that loader: each loads, and its block builds all its controls
+
+The Q-SYS libraries in the code
+- **Completions and hovers for the Q-SYS Lua libraries:** `TcpSocket.`, `Timer.`, `HttpClient.`, `Crypto.` and the rest list what they offer, each with a short description. A variable you made with one (`sock = TcpSocket.New()`, `SerialPorts[1]`, `require("rapidjson")`) completes too: `sock:` lists its methods, `sock.` its properties and handlers. So does the first parameter of a handler you set on it. Event and line-ending names complete after `TcpSocket.Events.` and `.EOL.`. Requests and handlers come as fill-in snippets
+- They work even while the plugin has an error, and everything they list is something Test mode runs
+
+Trace an image
+- With nothing selected, **Trace an image** (in the plugin panel) lays a mockup or a screenshot over the plugin to build to: set its opacity, scale (100% = one image pixel to one plugin pixel, or Fit to the plugin's width) and position, hide it for a moment, or remove it. Only you see it: it isn't written to the code, Save image and the datasheet leave it out, and clicks go through it. Qanvas remembers it for each plugin
+
+Fixed
+- **Graphics drew in the wrong order when helper functions add them:** they were stacked by where their table is written in the code instead of the order they go into the graphics table, as Designer draws them. A background added after a `label()` helper was defined covered every label and card. Controls now always draw above graphics, as measured in Designer, whatever their ZOrder
+- **An integer property's Value is an integer**, as on a Core, in Test mode and when you set a property's value in the preview: a port from a property joins a URL as `8080`, not `8080.0`, and a label made from a count reads `Ch 8`
+- Arrow-key nudges waiting to be written could be written in the middle of a drag that followed straight away, with the drag's positions. Nudges are now written before a drag starts
+- Saving a recorded test, accepting results and comparing with a file say what went wrong instead of nothing; a theme's corners go under the spelling a table already uses (`Radius`)
+
 ## 0.6.0 (2026-10-06)
 
 First public release, on the VS Code Marketplace.
