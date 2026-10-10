@@ -60,6 +60,7 @@ The [guide](docs/GUIDE.md) walks through everything, step by step.
 - **Release check:** **⇩ Export → Release check** lists what to look at before sharing (a placeholder Id, no Version, ShowDebug on, leftover prints, IP addresses and passwords written into the code, Id clashes in Designer's Plugins folder), and the code follows as you go through the list.
 - **Don't break wired designs:** renaming a control that designs already wire to (it has a pin in the copy in Designer's Plugins folder) asks first and offers to change only its pin name; **⇩ Export → Compare with another version** lists what designs using Designer's copy, the last commit or any file would lose (renamed or removed pins, changed controls and properties, a new Id).
 - **Send to Designer:** **⇩ Export → Send to Designer** (or *Qanvas: Send to Designer*) puts the plugin in Designer's Plugins folder, and Designer's library has it straight away: no restart, no new name (a plugin linked into the folder is the exception: Qanvas leaves links alone, so restart Designer for it). It never replaces a different plugin without asking.
+- **AI assistants can drive it:** GitHub Copilot in VS Code, Claude Code, Claude Desktop, Cursor and any app that supports MCP can see your plugin (the layout as data, and a picture drawn by the preview), change it through the preview's own engine (one undo step each), run the design and release checks, build a plugin from scratch, and test it in Test mode: press buttons, play the pretend device, read the console. It asks you before sending to Designer or using the real network, and nothing listens on the network. Setting each one up: the [guide](docs/GUIDE.md#11-ai-assistants).
 - **Trace an image:** lay a mockup or a screenshot over the plugin (opacity, scale, position) and build to it. It isn't written to the code or the images you export.
 - **Preview property values** without changing your code.
 - **Keyboard shortcuts:** press **?** for the list.
@@ -80,6 +81,7 @@ The [guide](docs/GUIDE.md) walks through everything, step by step.
 | `qanvas.colorDecorators` | on | Color swatches in `.qplug` files |
 | `qanvas.designerPluginsFolder` | (Designer's) | Where Send to Designer puts plugins |
 | `qanvas.sendToDesignerOnSave` | off | Send to Designer on every save |
+| `qanvas.assistantsOutsideVSCode` | off | Let AI assistants outside VS Code use Qanvas (see the [guide](docs/GUIDE.md#11-ai-assistants)) |
 
 ## Feedback
 

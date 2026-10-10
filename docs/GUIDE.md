@@ -82,17 +82,19 @@ Adding a page to a plugin without pages sets up the standard structure for you: 
 
 With nothing selected, the inspector shows the plugin: name, version (with a ↑ to bump it), author, description, block color, pages, **Properties** (change a default, add a number, choice, on/off or text property, remove one), and the background color and exact size.
 
+The **background** is one box Qanvas keeps for you: Q-SYS has no background setting, so it's a GroupBox with a Fill at the plugin's top-left, under everything. Pick the color again and that box changes; **Remove** takes it away. Themes use the same box. Other group boxes come from **Add**, like any graphic.
+
 **Trace an image**, at the bottom of that panel, lays a mockup or a screenshot over the plugin so you can build to it. **Choose image…** picks a PNG, JPEG, GIF, WebP, BMP or SVG. Opacity sets how much of it shows. Scale 100% puts one image pixel on one plugin pixel (right for a screenshot of Designer at 100%), and **Fit** scales it to the plugin's width. X and Y move it. **Hide** puts it away for a moment, and **Remove** stops tracing. Clicks go through the image to the plugin. Only you see it: it isn't written to the code, Save image and the datasheet leave it out, and Qanvas remembers it for each plugin on this PC.
 
 **Pins view** draws the schematic block as it comes out of Designer's library: its always-on pins (UserPin = true and no PinStyle). A pin with a PinStyle is optional, and so is the Disable pin every block offers: Designer drops the block with those unticked (you tick them under Properties → Control Pins), so the block leaves them off too, and says how many. Tick them in the plugin panel's **Control pins** list, or click **show them all**. **+ Control in** and **+ Control out** add a pin-only control (Style "None": a pin with no place on the panel) and show it on the block; **+ Audio in** and **+ Audio out** add an audio pin (GetPins).
 
-The **Not on the panel** strip (in the Panel view) lists controls your GetControls makes but GetControlLayout gives no place: Designer won't draw them on the panel, though their pins and `Controls.Name` still work. Drag one onto the plugin to place it, or leave it if it's meant to be a pin only.
+The **Not on the panel** strip (in the Panel view) lists controls your GetControls makes but GetControlLayout gives no place on any page: Designer doesn't make them at all, so they have no pin and no `Controls.Name` when the plugin runs. Drag one onto the plugin to place it (a control that's only there for its pin still needs a place: put it on a page people don't use).
 
 ## 8. Testing
 
 **▶ Test** runs the runtime part of your plugin (`if Controls then … end`) in the preview. Buttons (toggle, momentary, trigger), faders, knobs, text boxes and combo boxes drive your EventHandlers; timers run; `print()` and errors (with their line) show in the console. Change the code and the test restarts. A control's RampTime glides values your code sets, as on a Core. SSH is a stand-in that leaves a note in the console. **Esc** stops.
 
-**TcpSocket talks to a pretend device.** When your code connects, the console shows it, everything your code writes appears there (`→ PWR?\r`), and a second input lets you play the device: type `PWR=ON` and it arrives as Data with a CR LF (or type exact bytes with `\r`, `\n`, `\xNN`). Binary protocols work byte for byte: a write of `"\x81\x01\x04\x00\x02\xFF"` shows as `→ \x81\x01\x04\x00\x02\xff`, and `\x90\x41\xFF` typed for the device arrives as those three bytes. Your parsing runs as it would against the real thing, whether you use `sock.EventHandler` or the callbacks (`sock.Connected`, `sock.Data`…). A write before the socket says Connected is pointed out. **Drop link** makes the device hang up: your code gets Closed, then Reconnect and Connected after the socket's ReconnectTimeout, so you can watch your recovery work.
+**TcpSocket talks to a pretend device.** When your code connects, the console shows it, everything your code writes appears there (`→ PWR?\r`), and a second input lets you play the device: type `PWR=ON` and it arrives as Data with a CR LF (or type exact bytes with `\r`, `\n`, `\xNN`). Binary protocols work byte for byte: a write of `"\x81\x01\x04\x00\x02\xFF"` shows as `→ \x81\x01\x04\x00\x02\xff`, and `\x90\x41\xFF` typed for the device arrives as those three bytes. Your parsing runs as it would against the real thing, whether you use `sock.EventHandler` or the callbacks (`sock.Connected`, `sock.Data`…). A write before the socket says Connected is an error, as on a Core. **Drop link** makes the device hang up: your code gets Closed, then Reconnect and Connected after the socket's ReconnectTimeout, so you can watch your recovery work.
 
 **UdpSocket** talks to the same pretend device: what you Send shows in the console, and what you type arrives as a packet from the address you last sent to.
 
@@ -117,6 +119,8 @@ The **Not on the panel** strip (in the Panel view) lists controls your GetContro
 - Only your plugin's own code is counted, not Qanvas's stand-ins for Q-SYS's libraries (on a Core those are built in).
 - A plugin's own `Controls.X:Trigger()` pulses the control but doesn't run its EventHandler (Emulate runs it): call the function directly.
 - `os.clock()` is CPU time, not the time of day: use `Timer.Now()`.
+- Setting a property a control doesn't have (`Controls.Gain.Vaule = 5`) is an error, and `.Boolean` is true when the position is above 0.5 (a knob at -100 dB is false).
+- Files aren't simulated: `io.open`, `os.remove` and `dir` fail as they do for a missing file, so your plugin's own failure path runs.
 
 One thing Test mode can't do as a Core does: its Lua keeps whole numbers in 32 bits, where a Core's go to 64. A result past 2,147,483,647 wraps around in Test mode (`1791234567 * 1000`, a millisecond timestamp), a hex number past `0x7FFFFFFF` is negative (`0xDEADBEEF`), and `string.unpack` reads a 4-byte number past 2,147,483,647 as a negative one. So Test mode says so wherever it happens, with the line and what a Core would give, in the console and the Core tab, and points out such numbers written in the code when the test starts. Bit work like a CRC-32 or an IP address made with `<<` and `|` keeps its bits and comes out the same.
 
@@ -161,10 +165,49 @@ The console has a **Lua prompt** into the running plugin: type an expression to 
   - `HttpClient.Download`, handlers and `ReadLine` come as fill-in snippets.
   - Hover any of these for a short description.
   - They work even while the plugin has an error, and they list only what Test mode runs.
-- Problems with quick fixes: Lua errors on the right line, duplicate names after copy and paste, a missing PluginInfo, GetProperties or GetControls (Designer won't load or place the plugin), a missing GetControlLayout (Designer adds a script's own controls to the block), an empty Name or Id, icon names Designer won't draw, and runtime code that names a control that no longer exists.
+- Problems with quick fixes: Lua errors on the right line, duplicate names after copy and paste, a missing PluginInfo, GetProperties or GetControls (Designer won't load or place the plugin), a missing GetControlLayout (Designer adds a script's own controls to the block), an empty Name or Id, icon names Designer won't draw, controls Designer leaves out (a ControlType, ButtonType, ControlUnit or IndicatorType spelled any other way, case included, or a Button without a ButtonType), and runtime code that names a control that no longer exists.
+- The preview runs your plugin the way Designer does: each design function (GetControls, GetControlLayout, GetPrettyName…) in a Lua of its own where your code has just run, so what one sets in a global isn't there in another, with `props` as Designer hands it (each property's Name, Type, Value, Min and Max, and Designer's own, such as Show Debug), and with `json`, `require`, `bit32` and `math.pow` there as in Designer.
 - `{ r, g, b }` colors get swatches and VS Code's color picker.
 
-## 11. Keyboard
+## 11. AI assistants
+
+An AI assistant can work on your plugins the way you do in the preview: look at the layout (as data, and as a picture the preview draws), change it, check it, and run it in Test mode. It sees what you see, and you see what it does: its changes appear in the code and the preview as it makes them.
+
+Ask for a plugin from scratch ("a projector driver with power, inputs and a status display"), a fix ("the legends on the source buttons are cut off"), or a test ("connect to the pretend device and check the power feedback"). The assistant can look at the picture after each change and try again.
+
+### Setting one up
+
+**GitHub Copilot in VS Code:** nothing to set up. Open the Chat view, choose **Agent**, and ask: the Qanvas tools are in its tools list (the tools button) once a plugin is open. VS Code asks before each change and says what it will do; allow them for the session to let it work on its own.
+
+**Claude Code, Claude Desktop, Cursor and other apps that support MCP servers:** in VS Code, run **Qanvas: Connect an Assistant Outside VS Code** once. It asks whether to let them in, then shows the settings to give the assistant: a server called `qanvas` that runs on VS Code's own program (`command`), with Qanvas's relay as its argument (`args`) and `ELECTRON_RUN_AS_NODE=1` in its environment, so nothing else needs installing. **Copy** puts them on the clipboard. Then:
+
+- **Claude Code:** in a terminal, with the two paths from those settings:
+  ```
+  claude mcp add --env ELECTRON_RUN_AS_NODE=1 --transport stdio --scope user qanvas -- "<command>" "<the relay>"
+  ```
+  Or paste the `qanvas` entry under `mcpServers` in a `.mcp.json` in the project's folder.
+- **Claude Desktop:** Settings, **Developer**, **Edit Config**: paste the `qanvas` entry under `mcpServers` in that file, save it, and restart Claude Desktop.
+- **Cursor:** Cursor Settings, **MCP**, add a new global MCP server: paste the `qanvas` entry under `mcpServers` in the `mcp.json` it opens.
+- **Any other app** that runs MCP servers: the same command, argument and environment variable, in its MCP settings.
+
+It works while VS Code is open, with the plugin's folder (or the plugin) open in it. The status bar shows **Assistant** while one is connected; click it to see the settings again or to turn this off (or turn off `qanvas.assistantsOutsideVSCode`). An assistant that works in a terminal can also edit the `.qplug` itself: the preview follows, and the tools see the change.
+
+What an assistant can do:
+
+| | |
+|---|---|
+| **See** | The plugins open in VS Code; the layout as data: pages, properties, controls, graphics, places and sizes, and what placed each one (plain numbers, a loop, a helper or a lookup table, with the number a move changes); a picture of the plugin or its block, drawn by the preview, live values included in Test mode; the page, property values, look and traced image the preview shows |
+| **Check** | The design check (each finding with its fix), the release check, and what designs using another version would notice |
+| **Change** | What the preview does, through the same engine: move and resize (things a loop or lookup table places too, checked on every page), set fields, add controls, graphics, presets, pins, pages, properties, EventHandlers and runtime code, rename, delete, themes and finishes, stacking, looks and scaling. A new plugin from a starter. Each change is one undo step, and a dry run says what would change (the lines, and what else moves) without writing anything |
+| **Run** | Test mode: press buttons, set faders, knobs and text, play the pretend device (what it sends, HTTP replies, a dropped link, its rules), run Lua, skip ahead in time, and read the console, the Values list and the Core tab. Record a session as a test, run the recorded tests. The real network too, once you allow it |
+
+What keeps it safe:
+- **Nothing listens on the network.** In VS Code the tools run inside Qanvas. Outside VS Code, the assistant reaches Qanvas through a private pipe on this computer, which only your account can use, and only with a secret that changes every time VS Code starts. It's off until you turn it on.
+- **Changes are normal edits:** you see them in the code, Ctrl+Z undoes each one, and they go through the preview's engine, so an assistant can't do anything a drag couldn't. A change that would leave the code with an error isn't written. Renaming a control that designs wire to asks you first, as it does when you do it. A change is saved when the file had nothing unsaved, so an assistant that reads the file sees it; your own unsaved typing is never saved for you, and an assistant's save never sends to Designer.
+- **It asks you first** before sending to Designer (every time), and before Test mode uses the real network (once for each plugin, until VS Code closes): that's when real equipment can do what the plugin tells it.
+- **It stays in your project.** An assistant works on plugins open in VS Code or in the folders open there, and reads or writes files only there (or beside the plugin). Pictures go only to the assistant. Qanvas writes no other files unless the assistant asks for a datasheet, a recorded test or a new plugin, and it never writes over a plugin or a datasheet that's there.
+
+## 12. Keyboard
 
 | Keys | |
 |---|---|

@@ -1,5 +1,37 @@
 # Changelog
 
+## 0.8.0 (2026-10-10)
+AI assistants can see your plugins, change them, check them and test them: GitHub Copilot in VS Code, Claude Code, Claude Desktop, Cursor and any app that supports MCP.
+
+AI assistants
+- **An assistant works the way you do in the preview.** It sees the layout as data (pages, controls, graphics, places and sizes, and what placed each one: plain numbers, a loop, a helper or a lookup table, with the number a move changes and what moves with it) and as a picture, drawn by the preview itself. It runs the design check (with its fixes), the release check and Compare. It changes the plugin through the preview's own engine: moves and resizes (things loops and lookup tables place too, checked on every page), fields, controls, graphics, presets, pins, pages, properties, EventHandlers and runtime code, renames, the background, themes and finishes, stacking, looks and scaling, each call one undo step, with a dry run that says what would change (the lines, and what else moves). It starts new plugins from the starters, and exports the datasheet
+- **And it tests what it builds.** Test mode: press buttons, set faders, knobs and text, play the pretend device (what it sends, HTTP replies, a dropped link, its rules), run Lua, skip ahead in time, and read the console, the Values list and the Core tab, then record the session as a test and run the recorded tests
+- **GitHub Copilot in VS Code** (agent mode) has the tools once you have a plugin, with nothing to set up. VS Code asks before each change and says what it will do
+- **Claude Code, Claude Desktop, Cursor and other apps:** **Qanvas: Connect an Assistant Outside VS Code** lets them in while VS Code is open, and gives the settings to add (the guide has the steps for each). It runs on VS Code's own program, so nothing else needs installing. The status bar says when one is connected
+- **Safe by design.** Nothing listens on the network: outside assistants come in through a private pipe on this computer, only with a secret, and only once you've turned it on. Send to Designer always asks you first, and so does Test mode's real network (once for each plugin, until VS Code closes). An assistant works on plugins in your project, and a change that would leave the code with an error isn't written. A change is saved when the file had nothing unsaved, so assistants that read the file see it; your own unsaved typing is never saved for you, and an assistant's save never sends to Designer
+- Needs VS Code 1.106 or later (pictures in tool results). Older VS Code keeps Qanvas 0.7
+
+Closer to Designer: the preview (measured with Designer's own plugin loader, 10.5 and 10.0.3)
+- **Each design function runs on its own, as in Designer.** GetControls, GetControlLayout, GetPrettyName and the rest each get a fresh Lua where the plugin's code has just run, so what one of them sets in a global isn't there in another. A layout that only worked in the preview because of one now looks as it will in Designer
+- **props is what Designer hands the functions:** each property's Name, Type (Designer's: "bool", and "string" for an enum), Value, Min and Max, and Designer's own properties (Show Debug, Script Access...). QSC's plugin framework, which reads props.plugin_show_debug, now previews. With PluginInfo.ShowDebug, Show Debug is in the property values you can try, and properties RectifyProperties hides are hidden there and in the datasheet
+- **Type names are exact, as in Designer.** Designer leaves out a control whose ControlType, ButtonType, ControlUnit or IndicatorType is spelled any other way (case too), and a Button without a ButtonType: the problems say so, and the preview shows only a hint of where it was. QSC's own spellings (Style "LED", IndicatorType "LED", Style "Indicator") draw as Designer draws them
+- **A control with no place on any page isn't made, pin or not**: the problem says so, Test mode has no Controls entry for it, and the datasheet leaves it out (it said "pin only")
+- **json, require, bit32 and Lua 5.2's math functions** (pow, atan2, cosh, sinh, tanh, frexp, ldexp, log10) are there, as in Designer and on a Core, and QSC's eight extra icon names (Telephone In, Play Pause, Circle...) aren't flagged
+- **Numbers print as a Core prints them:** 1e+15, 5e-05, inf, and string.format rounds an exact half to even ("%.0f" of 2.5 is 2), as C does
+
+Closer to a Core: Test mode
+- **Controls:** Boolean is true when the position is above 0.5 (a knob at -100 dB is false), a Value of true or false is 1 or 0, MinValue, MaxValue, MinString, MaxString, IsIndeterminate and CssClass are there, a NaN is refused, and setting a misspelled property is the Core's error ("Property 'Vaule' does not exist on Control") instead of a quiet new field
+- **require("json") makes the global json**, as on a Core, and require gives the standard libraries
+- **TcpSocket:** Write while not connected is an error, as on a Core; EOL.Any takes any run of CR and LF as one line end; Close, which a Core doesn't have, is gone
+- **HttpClient.Get, Post, Put, Patch and Delete**, and User and Password log in on the real network
+- **System and Design.GetStatus** have the fields QSC lists (Version "10.5.0", BuildVersion, LockingId), and no made-up ones
+- **Files:** io.open, os.remove, os.rename, os.getenv and dir have stand-ins that touch nothing and fail the way a missing file does, so the plugin's own failure path runs (they were missing)
+- **Colors set from code** draw in "#RGB", "#AARRGGBB" and color names too
+- The Volume buttons and IP connection presets keep their timer and socket in globals, as QSC advises
+
+Fixes
+- **The Background color always works on the one background box.** Picking it again recolors that box: it never adds a second one, however small the plugin, and it still finds the box after the plugin grows past it. A new background goes under everything, even under something sent to the back in Layers. Themes add and recolor it the same way
+
 ## 0.7.0 (2026-10-09)
 Drag what your code places, test against the real device and record the tests, finish a theme, and send to Designer without restarting it.
 
