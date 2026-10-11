@@ -4,7 +4,7 @@ A walk through everything Qanvas does, in the order you'll want it. For the shor
 
 ## 1. Open a plugin
 
-Open any `.qplug` file and click the **layout icon** in the editor's title bar (or press **Ctrl+K Q**). The preview opens beside the code and draws the plugin the way Q-SYS Designer does. Type in the code and the preview follows; drag in the preview and the code follows.
+Open any `.qplug` file (or a file of a plugin split into files: see below) and click the **layout icon** in the editor's title bar (or press **Ctrl+K Q**). The preview opens beside the code and draws the plugin the way Q-SYS Designer does. Type in the code and the preview follows; drag in the preview and the code follows.
 
 The toolbar, left to right:
 
@@ -20,6 +20,18 @@ The toolbar, left to right:
 | **🎨 Theme** | Restyle the whole plugin |
 | **✨** | The design check |
 | **✓ / ⚠** | Problems in the code |
+
+### A plugin split into files
+
+Plugins kept the way QSC's plugin compiler builds them work too: a `plugin.lua` whose `--[[ #include "file.lua" ]]` lines pull in the other files (info.lua, controls.lua, layout.lua, runtime.lua…), and `--[[ #encode "logo.png" ]]` for an image. Open **any** of the files and click the layout icon: the preview shows the whole plugin, joined exactly as the compiler joins it, and follows your typing in every file.
+
+- **Everything works on it as on a `.qplug`.** A drag changes the number in the file it's in (layout.lua, say). A new control goes into controls.lua as one more `table.insert`, and its place into layout.lua, on the page you're on (in QSC's template too, while those files are still empty). Ctrl+Z undoes it, as one step.
+- **Lines are named by their file:** problems show in the file and on the line they're in, and the console, the inspector and the Core tab say "layout.lua:23". An `#include` of a file that isn't there, or one the compiler passes over (single quotes, not at the start of its line, two tabs before it), is a problem on its line in plugin.lua.
+- **Send to Designer** sends the plugin as the compiler writes it, where its build puts it: `Plugins\room-control\room-control.qplug` for a plugin in a folder called room-control (in a folder called `src`, `source`, `code`, `lua` or `plugin`, the folder above names it). The files are saved first. With `qanvas.sendToDesignerOnSave`, saving any of them sends it. If a file it #includes is missing, it asks before sending (and doesn't send on save): the compiler would stop there. Plugins sent this way were loaded with Designer's own plugin loader (10.0.3 and 10.5).
+- The release check, Compare, the datasheet, Test mode, recorded tests (`room-control.qtest.json`, beside plugin.lua) and the AI assistants all work on the whole plugin.
+- The `.qplug` the compiler makes sits beside plugin.lua: open its preview and Qanvas offers plugin.lua instead, since what you change in the build goes with the next build.
+
+Files are read from the plugin's folder and the folders in it, as the compiler reads them, and nothing outside it.
 
 ## 2. A new plugin in two minutes
 
@@ -191,6 +203,8 @@ Ask for a plugin from scratch ("a projector driver with power, inputs and a stat
 - **Any other app** that runs MCP servers: the same command, argument and environment variable, in its MCP settings.
 
 It works while VS Code is open, with the plugin's folder (or the plugin) open in it. The status bar shows **Assistant** while one is connected; click it to see the settings again or to turn this off (or turn off `qanvas.assistantsOutsideVSCode`). An assistant that works in a terminal can also edit the `.qplug` itself: the preview follows, and the tools see the change.
+
+A plugin split into files (plugin.lua and the files it includes) works the same way: the assistant names its plugin.lua (or any of its files), its changes go into the files they belong in, and every line it's told about comes with the file it's in.
 
 What an assistant can do:
 

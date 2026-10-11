@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.9.0 (2026-10-11)
+Plugins split into files the way QSC's plugin compiler builds them: preview, edit, test and send them as you do a .qplug.
+
+Plugins split into files
+- **Open any file of the plugin.** A plugin.lua whose `--[[ #include "file.lua" ]]` lines pull in the others (and `--[[ #encode "logo.png" ]]` for an image) previews from any of its files, joined exactly as QSC's compiler joins it: byte for byte what its build makes of real plugins. Typing in any of the files, or a file changed on the disk, redraws it
+- **Edits go into the file they belong in.** A drag changes the number in the file it's in; a new control goes into controls.lua as one more table.insert, and its place into layout.lua; a handler into runtime.lua. Each keeps the file's line ends (CR LF or LF) and its own indent, and Ctrl+Z undoes it as one step
+- **Lines say their file.** Problems show in the file and on the line they're in, and the preview, the console, the Core tab, the release check and Qanvas's messages say "layout.lua:23". An #include of a file that isn't there, one that would include itself, or one the compiler passes over, is a problem on its line
+- **Send to Designer** sends the plugin as the compiler writes it, where its build puts it (Plugins\room-control\room-control.qplug for a plugin in a folder called room-control), after saving its files; with a file it #includes missing, it asks first (and doesn't send on save). Plugins sent this way load and place in Designer's own plugin loader (10.0.3 and 10.5). Send on save works from any of its files
+- **The rest work on the whole plugin:** the release check, Compare, the datasheet, Test mode, recorded tests (room-control.qtest.json, beside plugin.lua) and the AI assistants, which name its plugin.lua and get every line with its file
+- Open the .qplug the compiler made beside plugin.lua and Qanvas offers plugin.lua instead (what's changed in the build goes with the next build)
+
+Also
+- **A new control comes last, in the code's own style.** Where GetControls fills its list with table.insert (as QSC's template does), a new control is one more table.insert after the last, so it's last in Designer's order too (it went first, inside `local ctrls = {}`)
+- **Page branches that test a page number kept in a local** (`local page = props["page_index"].Value`, then `if page == 2 then`) are found, so a new control goes on the page you're on (it went on every page)
+- An error in your plugin's code from what you type at the Test console shows on its line, as a link, like other errors; so do the Core's findings in the console
+
+Fixes
+- **Arrow-key nudges are written before you switch pages.** Switching page within a moment of the last nudge lost it
+- **A preset or handler that would take a big plugin past Lua's limit of 200 local variables in one function isn't added**, and the message says how to make room (the code was written, and Lua couldn't load it)
+- Two things added at the same place in one change keep their order, as VS Code writes them
+
 ## 0.8.0 (2026-10-10)
 AI assistants can see your plugins, change them, check them and test them: GitHub Copilot in VS Code, Claude Code, Claude Desktop, Cursor and any app that supports MCP.
 
