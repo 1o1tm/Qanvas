@@ -1,5 +1,59 @@
 # Changelog
 
+## 1.0.0 (2026-10-12)
+1.0: a release of fixes and speed. Renames and deletes reach every page, plugins split into files undo and edit safely, Test mode is closer to a Core, and big plugins are quicker to type in and drag.
+
+Renames, deletes and names
+- **Renaming a control finds every place the layout names it:** a layout written as one table (`{ Go = {...} }`), the same control on every page, and later lines such as `layout["Go"].Legend = "Go!"`. Every page is checked afterwards, and a rename that would leave a page with something it can't place is refused (one of those was left with the old name: Designer dropped the control and its wires, or the plugin stopped running)
+- **Deleting a control takes it off every page** (another page kept its place)
+- **"Make names unique" only flags real duplicates:** two places on the same page. A control placed on two pages, or a helper table such as `place.Mute = { Position = ... }`, isn't a duplicate (it was flagged, and the fix moved a page's control or left a pinned one with no place)
+- **Renaming a page whose branches test it in a way Qanvas can't follow is refused** (the page was left empty)
+- **A property the code still reads can't be deleted** (`props.Channels.Value` and `Properties.Model.Value` count too; it was allowed, and GetControls then stopped with an error), and an assistant can't rename a property's Name while code reads it
+- **The inspector and the datasheet show a property's default from the code**, not the value you're previewing it with (a switch showed on when the code said off, and clicking it couldn't set it)
+- **Compare and the Pins view leave out controls with no place on any page:** Designer doesn't make them, so they have no pin. A pinned control that loses its last place is a break (it said nothing), and deleting one that never had a place isn't (it said "breaks"). One placed only with some property values still counts in Compare: blocks with those values have it
+- The release check looks at every page, not only the first
+
+Plugins split into files
+- **Ctrl+Z in the preview undoes the preview's last edit in every file it changed**, and Ctrl+Shift+Z does it again (it ran VS Code's undo in the file last shown, which could undo your own typing there)
+- **Edits are made one at a time**, each worked out on the files as the last one left them (two quick edits into a file that wasn't open could land in the wrong place)
+- **A lone CR counts as a line break everywhere**, as in VS Code, Lua and QSC's compiler (a file with stray CRs got edits on the wrong line)
+- **An edit across the #include of an empty file is refused** (the #include line went), and **text added after a file with no line break at its end starts on a line of its own** (it was joined to the last line)
+- **A new handler goes into runtime.lua while it's still empty** (it went into plugin.lua)
+- **Renaming or deleting plugin.lua:** its other files find the plugin again (every command failed until VS Code was reloaded). With no plugin.lua, the plugin is found from a file two #includes down (a file in the middle was taken for it), and a root not called plugin.lua is named for its own file (two in one folder shared a name)
+- **Compare with the last commit** finds files whose #include spells them in another case, and a plugin.lua that starts with a byte-order mark
+- **Send on save waits** while another file of the plugin has unsaved changes (it saved them all to send). A file deleted from the disk while it's open counts as missing until it's back, as it does for the compiler
+- An #encode image can be deleted with its graphic, `sub/../a.lua` is the same file as `a.lua`, and color swatches show in the plugin's .lua files
+
+Test mode
+- **A TcpSocket that disconnects while it's still connecting doesn't connect** (it connected anyway, on the real network too)
+- **A meter's Position is where its Value sits between its Min and Max**, and setting its Position sets its Value (Position stayed 0, and setting it put the Value at 1). A recorded test that reads a meter's Position sees the new numbers: **Qanvas: Accept Recorded Test Results** takes them
+- **A toggle that starts on goes off on its first press** (it sent on again)
+- **`os.time()` and `os.date()` move with Test mode's clock**, ⏩ too, and `os.date("!%H:%M")` gives UTC. **`math.random`** is each session's own and gives the same numbers every start until `math.randomseed`, as Lua does on a Core. So a recorded test that shows the time or a random number replays the same every time (it failed a second later)
+- **JSON:** a whole number past 32 bits encodes (`rapidjson.encode` of a time in milliseconds gave an error), and a character written as two `\u` escapes (an emoji) decodes to one
+- A runtime section guarded with `if Controls ~= nil then` gets new handlers and presets too (a second section was added)
+
+Also fixed
+- **The Live look updates when you preview other property values** (it kept the startup of the values before)
+- **The design check counts what loops and helpers place** once Qanvas has worked out their numbers (the ✨ count left them out until the next change)
+- **Design check: Fix all goes through.** A fix the code can't take (the text color of a label a loop makes) isn't offered, so it doesn't stop the others
+- **The inspector's Pin shows the way an always-on pin goes** (UserPin with no PinStyle showed "None"), and clicking that way keeps it always on
+- A resize of something the code works out below zero size is refused with why (the code then made it another size than the preview showed)
+- An assistant's new control with several elements needs a Count; one element is its place
+- An edit that was refused or called off no longer selects something later
+
+Faster
+- **Typing in a big plugin:** completions and hovers answer at once (each worked the whole plugin out again, holding up VS Code), and the Live look reruns the plugin's startup after a pause in typing, not on every key
+- **Test mode on a big plugin:** the preview draws once a frame, and the Values list's flash no longer lays the page out for every value (a fast timer froze the preview)
+- **Dragging many things at once**, and drops on plugins with many pages (about twice as fast)
+- **Working out a big plugin:** the code Qanvas runs is put together in one pass (a 135 KB plugin with 600 items takes about 70 ms a change, from 150; tracing a 187 KB plugin's layout about 75, from 180)
+- **Send to Designer with a big Plugins folder** reads only the plugins that changed since the last send
+- Plugins split into files: only their own files' changes are followed, and opening other .lua files doesn't look for a plugin each time
+
+Safer
+- **Compare with the last commit runs git from a folder of its own**, so a program called git in your project's folder can't run; Designer's folder is looked up with Windows' own reg.exe
+- **Files that #include each other over and over are cut off** at half a million lines, with a problem saying so (VS Code froze)
+- **An assistant's Lua at the Test console asks first** while the real network is on, and assistants are told the Test mode tools can reach outside
+
 ## 0.9.0 (2026-10-11)
 Plugins split into files the way QSC's plugin compiler builds them: preview, edit, test and send them as you do a .qplug.
 
